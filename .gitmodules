@@ -1,0 +1,6 @@
+[submodule "surge"]
+	path = surge
+	url = https://github.com/bftjoe/surge
+[submodule "cpp-taskflow"]
+	path = cpp-taskflow
+	url = https://github.com/bftjoe/cpp-taskflow
