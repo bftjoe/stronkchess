@@ -4,6 +4,8 @@
 #include "position.h"
 #include "types.h"
 
+#include "cpp-httplib/httplib.h"
+
 using namespace std;
 
 
@@ -68,27 +70,56 @@ void test_perft() {
 		<< std::chrono::duration_cast<std::chrono::microseconds>(diff).count() << " [microseconds]\n";
 }
 
+template<Color Us>
+int eval(Position& p) {
+	return (MoveList<Us> list(p)).size();
+}
+
 vector<uint64_t> previous_hash;
+
+httplib::Server svr;
 
 int main() {
     initialise_all_databases();
     zobrist::initialise_zobrist_keys();
 	
+    string input;
+    cin >> input;
 
-    Position p;
-    Position::set("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -", p);
-    cout << p;
-  
-    MoveList<WHITE> list(p);
-  
-    for(Move m : list) {
-        cout << m << "\n";
-    }
+  if (0 == input.compare("uci") ){
+      cout << "id name stronkchess\n"
+        << "id author Joseph Huang\n"
+        << "uciok" << endl;
+        
+      cin >> input;
+      if (0 == input.compare("isready") ){
+        cout << "readyok";
+      }
+      return 0;
+  }
+  else if (0 == input.compare("test") ){
     
-    cout << "eval score: " << list.size();
+      Position p;
+      Position::set("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -", p);
+      cout << p;
+    
+      MoveList<WHITE> list(p);
+    
+      for(Move m : list) {
+          cout << m << "\n";
+      }
+      
+      cout << "eval score: " << list.size();
 
-    previous_hash.push_back(p.get_hash());
-	test_perft();
+      previous_hash.push_back(p.get_hash());
+	  test_perft();
+  }
+  else if (0 == input.compare("server") ){
+    svr.Get("/hi", [](const httplib::Request &, httplib::Response &res) {
+      res.set_content("Hello World!", "text/plain");
+    });
 
+    svr.listen("0.0.0.0", 8080);
+  }
     return 0;
 }

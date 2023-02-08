@@ -1,3 +1,6 @@
 [submodule "surge"]
 	path = surge
 	url = https://github.com/bftjoe/surge
+[submodule "cpp-httplib"]
+	path = cpp-httplib
+	url = https://github.com/yhirose/cpp-httplib.git
