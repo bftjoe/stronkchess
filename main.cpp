@@ -70,9 +70,16 @@ void test_perft() {
 		<< std::chrono::duration_cast<std::chrono::microseconds>(diff).count() << " [microseconds]\n";
 }
 
-template<Color Us>
+const int mate_score = 10000;
+
+template<Color sideToMove, Color side>
 int eval(Position& p) {
-	return (MoveList<Us> list(p)).size();
+	MoveList<sideToMove> list(p);
+	int adjust = sideToMove == side ? 1 : -1;
+	if (list.size() > 0 )
+	  return list.size() * adjust;
+	else
+	  return mate_score * adjust;
 }
 
 vector<uint64_t> previous_hash;
@@ -80,9 +87,11 @@ vector<uint64_t> previous_hash;
 httplib::Server svr;
 
 int main() {
+  using namespace httplib;
+
     initialise_all_databases();
     zobrist::initialise_zobrist_keys();
-	
+/*	
     string input;
     cin >> input;
 
@@ -114,12 +123,37 @@ int main() {
       previous_hash.push_back(p.get_hash());
 	  test_perft();
   }
-  else if (0 == input.compare("server") ){
-    svr.Get("/hi", [](const httplib::Request &, httplib::Response &res) {
-      res.set_content("Hello World!", "text/plain");
+  else if (0 == input.compare("server") )*/{
+    svr.Get("/about", [](const httplib::Request &, httplib::Response &res) {
+      res.set_content("stronkchess by Joseph Huang", "text/plain");
+    });
+    
+    svr.Get(R"(/(([a-h][1-8][a-h][1-8])*))", [&](const Request& req, Response& res) {
+      string s = req.matches[1];
+      Position p;
+      Position::set("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -", p);
+      int ev = eval<WHITE, WHITE>(p);
+      
+      auto m = s.substr(0, 4);
+      
+      while (s.length() >= 4){
+        p.play<WHITE>(Move(m));
+        ev = eval<BLACK, BLACK>(p);
+        s = s.substr(4);
+        if (s.length() >= 4){
+          p.play<BLACK>(Move(s.substr(0,4)));
+          ev = eval<WHITE, WHITE>(p);
+          s = s.substr(4);
+        }
+        m = s.substr(0, 4);
+      }
+      res.set_content(to_string(ev), "text/plain");
+      
+      cout << p;
     });
 
     svr.listen("0.0.0.0", 8080);
-  }
+}
+  
     return 0;
 }
